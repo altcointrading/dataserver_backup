@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <title>Altcoin Performers | Hourly Change Rates</title>
+    <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet">
+    <style media="screen">
+    body{margin:0}
+    a, a:hover {color: #001f3f;}
+    #altindex{display:block;color:#000b17;font-family:"Droid Sans",sans-serif;font-weight:800;letter-spacing:.05em;line-height:1;margin:0;text-transform:uppercase;
+    font-size:21px;transition:all .4s}
+    #altindex p{margin:5px 0}
+    #altindex small{font-weight:200;font-size:16px;color:#7A838D}
+    </style>
+  </head>
+  <body>
+  <script src="https://unpkg.com/vue/dist/vue.min.js"></script><!-- 2.2.1 -->
+  <script src="https://cdn.jsdelivr.net/vue.resource/1.0.3/vue-resource.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js" charset="utf-8"></script>
+    <div class="datablock">
+      <div id="altindex">
+        <p>Index: {{ $data.gridData.index | bitcoins }}</p>
+        <small>Hourly Change: {{ $data.gridData.hchange | percents }}</small>
+        <p>ETH: {{ $data.gridData.eth_price | bitcoins }}</p>
+        <small>Hourly Change: {{ $data.gridData.eth_hchange | percents }}</small>
+        <p>ETC: {{ $data.gridData.etc_price | bitcoins }}</p>
+        <small>Hourly Change: {{ $data.gridData.etc_hchange | percents }}</small>
+        <p>DASH: {{ $data.gridData.dash_price | bitcoins }}</p>
+        <small>Hourly Change: {{ $data.gridData.dash_hchange | percents }}</small>
+        <p>XMR: {{ $data.gridData.xmr_price | bitcoins }}</p>
+        <small>Hourly Change: {{ $data.gridData.xmr_hchange | percents }}</small>
+      </div>
+    </div>
+  <script type="text/javascript">
+
+  Vue.use(VueResource)
+
+  var altindex = new Vue({
+
+      el: '#altindex',
+      data: {
+        gridData: {
+          index: "-",
+          hchange: "-",
+          eth_price: "-",
+          eth_hchange: "-",
+          etc_price: "-",
+          etc_hchange: "-",
+          dash_price: "-",
+          dash_hchange: "-",
+          xmr_price: "-",
+          xmr_hchange: "-"
+        }
+      },
+      filters: {
+        moment: function(str) {
+          var d = new Date(str);
+          if (moment(d).isValid() ) {
+            return moment(d).format('MMMM Do \'YY, h:mm a') + " UTC";
+          } else {
+            return "-";
+          }
+        },
+        dollars: function(str) {
+          var dp = str/100
+          if (isNaN(dp)) {
+            return "-"
+          } else {
+            return dp
+          }
+        },
+        bitcoins: function(str) {
+          var dp = Math.round(str * 100000000) / 100000000
+          if (isNaN(dp)) {
+            return "-"
+          } else {
+            return dp + " BTC"
+          }
+        },
+        percents: function(str) {
+          var dp = Math.round(str * 100000) / 100000
+          if (isNaN(dp)) {
+            return "-"
+          } else {
+            return dp + " %"
+          }
+        }
+      },
+      methods: {
+        getIndexes () {
+          var vm = this
+          setInterval(function() {
+          vm.$http.get("https://data.altcointrading.net/api/chartdata.json")
+            .then(function (response) {
+              var arr = response.data.data
+              vm.gridData.index = arr[0].index
+              vm.gridData.hchange = ( arr[0].index - arr[11].index ) / arr[0].index
+            })
+            .catch(function (error) {
+              vm.gridData = error
+            })
+          }, 1000)
+        },
+        getCoins () {
+          var vm = this
+          setInterval(function() {
+            vm.$http.get("https://data.altcointrading.net/api/ticker.json")
+              .then(function (response) {
+                var arr = response.data["BTC_ETH"]
+                 vm.gridData.eth_price = arr["last"]
+                 vm.gridData.eth_hchange = arr["percentChange"]
+                var arr = response.data["BTC_XMR"]
+                 vm.gridData.xmr_price = arr["last"]
+                 vm.gridData.xmr_hchange = arr["percentChange"]
+                var arr = response.data["BTC_DASH"]
+                  vm.gridData.dash_price = arr["last"]
+                  vm.gridData.dash_hchange = arr["percentChange"]
+                var arr = response.data["BTC_ETC"]
+                    vm.gridData.etc_price = arr["last"]
+                    vm.gridData.etc_hchange = arr["percentChange"]
+              })
+              //console.log("chg")
+          }, 1000)
+
+        }
+      },
+      mounted: function() {
+        this.getIndexes()
+        this.getCoins()
+      }
+  })
+  </script>
+</body>
+</html>

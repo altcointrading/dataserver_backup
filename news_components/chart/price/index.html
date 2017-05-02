@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <title>AltIndex | Price vs Altindex Chart</title>
+    <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet">
+    <style media="screen">
+    body{margin:0}
+    a, a:hover {color: #001f3f;}
+    .margin {margin: 50px}
+    #altindex{display:block;color:#000b17;font-family:"Droid Sans",sans-serif;font-weight:800;
+    letter-spacing:.05em;line-height:1;margin:0;text-transform:uppercase;font-size:21px;transition:all .4s}
+    #altindex p{margin:5px 0}
+    #altindex small{font-weight:200;font-size:13px;color:#7A838D}
+    </style>
+  </head>
+  <body id="altindex">
+
+  <section>
+    <div class="ct-chart ct-perfect-fourth margin" id="altindex-price-chart"></div>
+  </section>
+
+  <script src="../chartist/chartist.min.js"></script>
+  <script src="../chartist-tooltip/chartist-plugin-tooltip.min.js"></script>
+  <link rel="stylesheet" href="../chartist/chartist.min.css">
+  <link rel="stylesheet" href="../chartist-tooltip/chartist-plugin-tooltip.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js" charset="utf-8"></script>
+
+  <script type="text/javascript">
+
+  function loadJSON(tocall, callback) {
+      var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+        xobj.open('GET', tocall, true);
+        xobj.onreadystatechange = function () {
+        if (xobj.readyState == 4 && xobj.status == "200") {
+          callback(xobj.responseText);
+        }
+      };
+      xobj.send(null);
+  }
+
+  function init( tocall, options, chartclass ) {
+   loadJSON(tocall, function(response) {
+      var actual_JSON = JSON.parse(response)['data'];
+
+      var labels = []
+      var series = []
+      for (index = 0; index < actual_JSON.length; ++index) {
+
+        labels.push(actual_JSON[index]['time']);
+        //series.push(actual_JSON[index]['index']);
+        series.push({meta: moment(actual_JSON[index]['time']).format("MM-DD HH:mm"), value: actual_JSON[index]['index']})
+ //  ========  this will need 3 series'
+      }
+
+      //console.log(series);
+      var data = { labels: labels.reverse(), series: [series.reverse()] }; //reverse()
+
+      new Chartist.Line( chartclass, data, options);
+
+   });
+  }
+
+  var options = {
+    showPoint: true,
+    lineSmooth: true,
+    axisX: {
+      showGrid: true,
+      showLabel: true,
+      labelInterpolationFnc: function skipLabels(value, index) {
+        //return value
+       return index % 2  === 0 ? moment(value).format("MM-DD HH:mm") : null;
+      }
+    },
+    axisY: {
+      type: Chartist.AutoScaleAxis,
+      showGrid: true,
+      showLabel: true,
+      //offset: 0,
+      labelInterpolationFnc: function(value) {
+        return value;
+      }
+    },
+    plugins: [
+     Chartist.plugins.tooltip({
+       class: 'tooltipclass',
+       appendToBody: true
+     })
+   ]
+  };
+  init(
+    'https://data.altcointrading.net/api/indexcoins.json',
+    options,
+    '#altindex-price-chart'
+  );
+
+  </script>
+
+
+</body>
+</html>

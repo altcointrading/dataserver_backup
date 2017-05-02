@@ -1,0 +1,94 @@
+<html>
+  <head>
+    <title>AltIndex | Embed</title>
+    <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet">
+    <style media="screen">
+    body{margin:0}
+    a, a:hover {color: #001f3f;}
+    #altindex{display:block;color:#000b17;font-family:"Droid Sans",sans-serif;font-weight:800;letter-spacing:.05em;line-height:1;margin:0;text-transform:uppercase;font-size:42px;transition:all .4s}
+    #altindex p{margin:5px 0}
+    #altindex small{font-weight:200;font-size:13px;color:#7A838D}
+    </style>
+  </head>
+  <body>
+  <script src="https://unpkg.com/vue/dist/vue.min.js"></script><!-- 2.2.1 -->
+  <script src="https://cdn.jsdelivr.net/vue.resource/1.0.3/vue-resource.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js" charset="utf-8"></script>
+    <div class="datablock">
+      <div id="altindex">
+        <small>Altindex<sup>beta</sup>
+          &nbsp;<a target="_blank" href="https://data.altcointrading.net/how/">[wut?]</a>
+          &nbsp;<a target="_blank" href="https://www.altcointrading.net/altindex/">[chart]</a></small>
+        <p>{{ $data.gridData[0] | bitcoins }} BTC</p>
+        <small>{{ $data.gridData[1] | moment }}</small>
+      </div>
+    </div>
+  <script type="text/javascript">
+
+  Vue.use(VueResource)
+
+  var altindex = new Vue({
+
+      el: '#altindex',
+      data: {
+        gridData: [
+        "-", "-"
+        ]
+      },
+      filters: {
+        moment: function(str) {
+          var d = new Date(str);
+          if (moment(d).isValid() ) {
+            return moment(d).format('MMMM Do \'YY, h:mm a');
+          } else {
+            return "-";
+          }
+        },
+        dollars: function(str) {
+          var dp = str/100
+          if (isNaN(dp)) {
+            return "-"
+          } else {
+            return dp
+          }
+        },
+        bitcoins: function(str) {
+          var dp = Math.round(str * 1000000) / 1000000
+          if (isNaN(dp)) {
+            return "-"
+          } else {
+            return dp
+          }
+        }
+      },
+      mounted: function() {
+        var vm = this
+        vm.$http.get("https://data.altcointrading.net/api/index.json")
+          .then(function (response) {
+            vm.gridData = response.data
+          })
+          .catch(function (error) {
+            vm.gridData = error
+          })
+        setInterval(function() {
+          vm.$http.get("https://data.altcointrading.net/api/index.json")
+            .then(function (response) {
+              vm.gridData = response.data
+            })
+        }, 10000)
+      }
+  })
+  </script>
+
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-73503011-5', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>
